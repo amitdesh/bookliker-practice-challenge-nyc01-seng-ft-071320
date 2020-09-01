@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     renderBookList();
     showBookProfile();
-    getUsersForBook()
+    likeBook()
 
 });
 
@@ -80,13 +80,21 @@ function displayBookShowPage(book){
     <br>Current Followers: <br>`
     li.dataset.id = id
     showPanel.appendChild(li)
+    li.append(addUsersToBook(book))
+    
+    
+}
+
+function addUsersToBook(book){
     let ul = ce("ul")
-    li.append(ul)
     for (user of book.users){
         let uLi = ce('li')
         uLi.innerText = user.username
+        uLi.dataset.id = user.id
+        uLi.classList.add("users")
         ul.append(uLi)
     }
+    return ul
 }
 
 function extractInfoFromBooks(bookID){
@@ -97,33 +105,67 @@ function extractInfoFromBooks(bookID){
 
 }
 
-function getUsersForBook(){
+function likeBook(){
     
     document.addEventListener('click', function(e){
         if(e.target.matches('.like-button')){
+            const self = {"id":1, "username": "pouros"}
+            let x = document.querySelectorAll('.users')
+            let userArray = []
+            x.forEach(user =>{
+                faker = {
+                    "id": parseInt(user.dataset.id),
+                    "username": user.innerText
+                }
+                userArray.push(faker)
+            })
+            userArray.push(self)
             let bookID = parseInt(e.target.parentNode.dataset.id)
-            fetch('http://localhost:3000/books/' + bookID)
-            .then(response => response.json())
-            .then(book => addUserToBook(book.users, book.id))
+            addNewUserToBook(userArray, bookID)
+    //         fetch(`http://localhost:3000/books/${bookID}`, {
+    //         method: "PATCH",
+    //         headers: {
+    //         "Content-type": "application/json",
+    //         "accept": "application/json"
+    //         },
+    //         body: JSON.stringify({
+    //         users: userArray
+    //         })
+    //      }).then(resp => resp.json())
+    //      .then(book => {
+    //          let x = document.querySelector('.users').parentElement
+    //          x.innerHTML = ''
+    //          addUsersToBook(book)
+    //         })
+    //      }) 
+    //     //  This belongs to fetch
+    //     })
         }
     })
 }
 
-function addUserToBook(users, id){
-    const self = {"id":1, "username":"pouros"}
-    users.push(self)
-    // debugger
-    console.log(users)
-    fetch('http://localhost:3000/books/'+id,{
+function addNewUserToBook(userArray, bookId){
+    fetch('http://localhost:3000/books/'+bookId,{
         method: "PATCH",
         header:{
             'Content-Type': 'application/json',
-            // 'Accept': 'application/json'
+            'accept': 'application/json'
 
         },
         body: JSON.stringify({
-            users: users
+            users: userArray
         })
     }).then(resp => resp.json())
-    .then(console.log)
+    .then(book =>{
+        let x = document.querySelector('.users').parentElement
+        x.innerHTML = ''
+        for (user of book.users){
+            let uLi = ce('li')
+            uLi.innerText = user.username
+            uLi.dataset.id = user.id
+            uLi.classList.add("users")
+            x.append(uLi)
+        }
+        console.log(x)
+    })
 }

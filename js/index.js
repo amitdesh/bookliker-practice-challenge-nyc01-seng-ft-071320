@@ -1,9 +1,9 @@
 
 document.addEventListener("DOMContentLoaded", function() {
 
-    renderBookList()
-    showBookProfile()
-    findBookUsers()
+    renderBookList();
+    showBookProfile();
+    getUsersForBook()
 
 });
 
@@ -19,7 +19,7 @@ let byId = (idTag) => {
     return document.getElementById(idTag)
 }
 
-var self = {"id":1, "username":"pouros"}
+
 
 function renderBookList(){
 
@@ -68,6 +68,7 @@ function showBookProfile(){
 function displayBookShowPage(book){
 
     let showPanel = byId("show-panel")
+    showPanel.innerHTML = ''
     const {img_url, title, subtitle, author, description, id} = book
     let li = ce("p")
     li.innerHTML = `<img src=${img_url}>
@@ -96,38 +97,33 @@ function extractInfoFromBooks(bookID){
 
 }
 
-function getUsersForBook(bookID){
-    fetch('http://localhost:3000/books/' + bookID)
-    .then(response => response.json())
-    .then(console.log)
-}
-
-function findBookUsers(){
-
+function getUsersForBook(){
+    
     document.addEventListener('click', function(e){
         if(e.target.matches('.like-button')){
             let bookID = parseInt(e.target.parentNode.dataset.id)
-            let users = getUsersForBook(bookID)
-            console.log(users)
-            addUserToBook(users,bookID)
-
+            fetch('http://localhost:3000/books/' + bookID)
+            .then(response => response.json())
+            .then(book => addUserToBook(book.users, book.id))
         }
     })
 }
 
-
-function addUserToBook(users, bookID){
+function addUserToBook(users, id){
+    const self = {"id":1, "username":"pouros"}
+    users.push(self)
+    // debugger
     console.log(users)
-    let newUsers = users.push(self)
-    fetch('http://localhost:3000/books'+`/${bookID}`,{
-        method: "POST",
+    fetch('http://localhost:3000/books/'+id,{
+        method: "PATCH",
         header:{
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            // 'Accept': 'application/json'
+
         },
         body: JSON.stringify({
-            users: newUsers
+            users: users
         })
-
-    })
-
+    }).then(resp => resp.json())
+    .then(console.log)
 }
